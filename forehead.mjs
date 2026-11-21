@@ -138,7 +138,7 @@ export class ForeheadPulse {
         x + size > width || y + size > height) {
       return this.reset("Waiting for a visible forehead");
     }
-    const previous = this.buffer.at(-1);
+    const previous = this.buffer[this.buffer.length - 1];
     if (previous && previous.time === time) return this.result;
     // One late frame should not discard half a minute of signal; longer stalls restart the window.
     if (previous && (time < previous.time || time - previous.time > 0.5)) {

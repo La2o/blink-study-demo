@@ -78,7 +78,7 @@ export function drawTrace(canvas, samples, now, opts = {}) {
     segment.forEach(([t, ear], i) => i ? path.lineTo(px(t), py(ear)) : path.moveTo(px(t), py(ear)));
     g.lineWidth = 2.6; g.strokeStyle = "#167660"; g.stroke(path);
     const fill = new Path2D(path);
-    fill.lineTo(px(segment.at(-1)[0]), bottom); fill.lineTo(px(segment[0][0]), bottom); fill.closePath();
+    fill.lineTo(px(segment[segment.length - 1][0]), bottom); fill.lineTo(px(segment[0][0]), bottom); fill.closePath();
     const gradient = g.createLinearGradient(0, top, 0, bottom);
     gradient.addColorStop(0, "#9bd7b578"); gradient.addColorStop(1, "#d9ece228");
     g.fillStyle = gradient; g.fill(fill);

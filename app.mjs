@@ -23,6 +23,27 @@ let video = $("video"), visionPromise = null;
 const previewRows = Array.from({length:81}, (_, i) => [i / 10, ...exampleRatios(i / 10)]);
 const startButton = $("start"), stopButton = $("stop"), stage = $("stage");
 
+// Keep the screen on while a session runs: phones dim and lock within seconds otherwise.
+// Optional everywhere; a browser without the Wake Lock API, or one that refuses, just carries on.
+let wakeLock = null;
+async function holdScreen() {
+  if (wakeLock || !navigator.wakeLock) return;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+    lock.addEventListener("release", () => {if (wakeLock === lock) wakeLock = null;});
+    if (!active) {lock.release().catch(() => {}); return;}   // the session ended while the request was pending
+    wakeLock = lock;
+  } catch {}
+}
+function releaseScreen() {
+  const lock = wakeLock; wakeLock = null;
+  if (lock) lock.release().catch(() => {});
+}
+// The system drops the lock when the page is hidden; take it again when the viewer returns.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && active) holdScreen();
+});
+
 // Per-closure bookkeeping, derived only from successive monitor.step() states.
 // A closure starts on the first frame whose phase is "closure" and ends on the first
 // frame where the phase is anything else (eyes reopened, tracking lost, or the session
@@ -98,7 +119,7 @@ function csvDownload(name, text) {
 function announce(message) {$("sr-status").textContent = message;}
 function updateHud(state, ear) {
   const phase = String(state.phase).toLowerCase(), current = log.current;
-  const last = log.done.at(-1);
+  const last = log.done[log.done.length - 1];
   $("hud-ear").textContent = "EAR " + (ear === null ? "—" : ear.toFixed(3));
   $("hud-count").textContent = "Closures " + log.count();
   $("hud-last").textContent = "Last " + (last ? last.duration.toFixed(2) + " s" : "—");
@@ -284,6 +305,7 @@ function releaseMedia() {
 function finish(message = "") {
   const wasActive = active;
   generation++; active = false;
+  releaseScreen();
   if (log.current) {
     log.close(true); renderLog();
     updateHud({phase:"open"}, null); updateSummary();
@@ -403,6 +425,7 @@ async function start(file = null) {
   finish();
   const id = generation;
   clearTrace(); notice(); draw(); active = true;
+  holdScreen();
   $("trace-sub").textContent = "Eye aspect ratio and closure state over the last eight seconds";
   fileName = file ? file.name : "";
   startButton.disabled = true;
@@ -478,7 +501,9 @@ function applyModel(data, label) {
 }
 async function loadDefault() {
   try {
-    const response = await fetch("./model.json",{cache:"no-cache",signal:AbortSignal.timeout(10000)});
+    // AbortSignal.timeout is missing before iOS 16, so the ten-second limit uses a plain controller.
+    const limit = new AbortController(), timer = setTimeout(() => limit.abort(), 10000);
+    const response = await fetch("./model.json",{cache:"no-cache",signal:limit.signal}).finally(() => clearTimeout(timer));
     if (!response.ok) return;
     const data = await response.json();
     new EventMonitor(data);

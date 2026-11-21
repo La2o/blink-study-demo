@@ -47,8 +47,8 @@ export function scoreModel(m,features) {
 }
 function features(samples,pre){
   const e=samples.map(s=>s.e),m=samples.map(s=>s.m),lo=Math.min(...e),hi=Math.max(...e);
-  return {ear_last:e.at(-1), ear_min:lo, ear_mean:e.reduce((a,b)=>a+b,0)/e.length,
-    ear_change:e.at(-1)-e[0],ear_drop:pre-lo,ear_range:hi-lo,mar_change:m.at(-1)-m[0],mar_onset:m[0]};
+  return {ear_last:e[e.length-1], ear_min:lo, ear_mean:e.reduce((a,b)=>a+b,0)/e.length,
+    ear_change:e[e.length-1]-e[0],ear_drop:pre-lo,ear_range:hi-lo,mar_change:m[m.length-1]-m[0],mar_onset:m[0]};
 }
 export class EventMonitor {
   constructor(model=null){
