@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102a30">
+  <meta name="description" content="Explore developing eye-closure events using a local camera, video file, or illustrative signal.">
+  <title>Blink Study · Eye-closure monitor</title>
+  <link rel="stylesheet" href="./study.css">
+</head>
+<body>
+  <header class="mast"><div class="wrap mast-inner">
+    <div class="identity"><span class="logo" aria-hidden="true"><i></i></span><span>Blink Study</span></div>
+    <span class="course">DAI530 <span>/</span> Machine Learning</span>
+  </div></header>
+  <main class="wrap">
+    <div class="intro"><h1>Eye-closure monitor</h1><p>Watch an eye closure develop and inspect the signal behind each decision.</p></div>
+    <div class="workspace">
+      <section class="visual-panel" aria-labelledby="view-title">
+        <div class="panel-top"><h2 id="view-title">Capture view</h2>
+          <fieldset class="source-switch"><legend class="sr-only">Input source</legend>
+            <label><input type="radio" name="source" value="example" checked><span>Example</span></label>
+            <label><input type="radio" name="source" value="camera"><span>Camera</span></label>
+            <label><input type="radio" name="source" value="file"><span>Video file</span></label>
+          </fieldset>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="illustration" aria-label="Schematic eye showing an illustrative closure"></canvas>
+          <div id="footage" hidden><video id="video" playsinline muted></video><canvas id="overlay" aria-hidden="true"></canvas></div>
+          <div id="empty-state" hidden><span class="frame-icon" aria-hidden="true"></span><strong id="empty-title"></strong><span id="empty-help"></span></div>
+          <div class="stage-label"><i></i><span id="source-label">Illustrative signal</span></div>
+          <span class="timecode" id="timecode">00:00.00</span>
+          <div class="hud" id="hud" aria-hidden="true" hidden>
+            <div class="hud-chips"><span class="chip" id="hud-ear">EAR —</span><span class="chip" id="hud-count">Closures 0</span><span class="chip" id="hud-last">Last —</span></div>
+            <div class="hud-banner" id="hud-banner" data-kind="open" hidden></div>
+          </div>
+          <div class="progress" id="progress" role="progressbar" aria-label="Video playback" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i id="progress-fill"></i></div>
+        </div>
+        <div class="plots">
+          <div class="plots-head"><h3>Live traces</h3><p class="sub" id="trace-sub">Eye aspect ratio and closure state over the last eight seconds</p></div>
+          <div class="chart chart-ear"><canvas id="trace" role="img" aria-label="Rolling plot of eye aspect ratio versus time, with dashed close and reopen thresholds"></canvas></div>
+          <div class="chart chart-state"><canvas id="states" role="img" aria-label="Rolling strip showing when the eyes were closed; flagged and long closures are red"></canvas></div>
+          <ul class="legend" aria-hidden="true"><li><i class="sw closed"></i>Closure</li><li><i class="sw flagged"></i>Flagged or long closure</li><li><i class="sw tick"></i>Model checkpoint</li><li><i class="sw gap"></i>Tracking lost</li></ul>
+        </div>
+        <div class="transport"><div class="actions">
+          <button type="button" class="primary" id="start">Play example</button>
+          <button type="button" class="secondary" id="stop" hidden>Stop</button>
+          <input type="file" id="video-file" accept="video/*" hidden>
+        </div><span id="transport-info" class="transport-info">Synthetic trace · 18 s</span></div>
+        <p id="notice" class="notice" aria-live="polite" hidden></p>
+      </section>
+      <aside class="readout" aria-labelledby="event-title">
+        <div class="panel-top"><h2 id="event-title">Event readout</h2></div>
+        <div class="readout-body"><div class="kicker">Current state</div>
+          <div id="phase" class="phase">Ready</div>
+          <p class="phase-detail" id="phase-detail">Play the example to follow a short blink and a longer closure.</p>
+          <div class="elapsed"><span>Closure elapsed</span><strong id="elapsed">—</strong></div>
+          <div class="checkpoint" aria-label="Progress through observation checkpoints"><div id="checkpoint-fill"></div></div>
+          <div class="tick-labels" aria-hidden="true"><span>0.00</span><span>0.20</span><span>0.40</span><span>0.60</span><span>0.80 s</span></div>
+          <dl class="measurements"><div><dt>Eye ratio <abbr title="Eye aspect ratio">EAR</abbr></dt><dd id="ear">—</dd></div>
+            <div><dt>Mouth ratio <abbr title="Study-specific mouth geometry ratio">MAR*</abbr></dt><dd id="mar">—</dd></div>
+            <div><dt>Model score</dt><dd id="score">—</dd></div>
+          </dl>
+          <div id="pulse-readout" hidden><div class="pulse-value"><span>Camera pulse estimate</span><strong id="pulse-bpm">—</strong></div>
+            <p id="pulse-status">Collecting a 30-second color window.</p></div>
+        </div>
+      </aside>
+      <section class="summary-panel" aria-labelledby="summary-title"><div class="panel-top">
+        <div><h2 id="summary-title">Session summary</h2><p class="sub">Eye closures detected in this run</p></div>
+        <div class="exports"><button type="button" id="download" class="plain" disabled>Save CSV</button><button type="button" id="download-events" class="plain" disabled>Save events CSV</button></div>
+      </div>
+        <dl class="stats">
+          <div><dt>Time analysed</dt><dd id="sum-time">—</dd></div>
+          <div><dt>Closures detected</dt><dd id="sum-count">—</dd></div>
+          <div><dt>Closures per minute</dt><dd id="sum-rate">—</dd></div>
+          <div><dt>Flagged by model</dt><dd id="sum-flagged">—</dd></div>
+          <div><dt>Long closures <span class="unit">≥ 0.85 s</span></dt><dd id="sum-long">—</dd></div>
+          <div><dt>Longest closure</dt><dd id="sum-longest">—</dd></div>
+          <div><dt>Time with eyes closed</dt><dd id="sum-closed">—</dd></div>
+          <div><dt>Tracking lost</dt><dd id="sum-lost">—</dd></div>
+        </dl>
+        <div class="log-wrap" tabindex="0" role="region" aria-label="Closure event log, scrollable">
+          <table class="log"><caption class="sr-only">Completed closures, newest first</caption>
+            <thead><tr><th scope="col">Onset</th><th scope="col">Duration</th><th scope="col">Score</th><th scope="col">Decision</th></tr></thead>
+            <tbody id="log-body"></tbody></table>
+        </div>
+        <p id="sr-status" class="sr-only" aria-live="polite"></p>
+      </section>
+      <section class="model-panel" aria-labelledby="model-title"><div class="panel-top"><h2 id="model-title">Event classifier</h2></div>
+        <div class="model-body"><strong id="model-name">Timing preview</strong>
+          <p id="model-description">Load a model exported by the study notebook to see its decision and score.</p>
+          <button type="button" class="secondary" id="load-model">Load model JSON</button><button type="button" class="plain" id="unload-model" hidden>Remove</button>
+          <input id="model-file" type="file" accept=".json,application/json" hidden>
+          <p id="model-status" aria-live="polite" hidden></p>
+          <p id="last-decision" hidden></p>
+        </div>
+      </section>
+    </div>
+    <footer><p>Camera and video frames are processed in this browser. Landmark tracking downloads Google MediaPipe on first use.</p><p>Research demonstration for use while stationary.</p><p>Not a medical or safety device.</p></footer>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
