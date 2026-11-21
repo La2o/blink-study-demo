@@ -134,8 +134,9 @@
     <p class="note" id="time-hint">For a visible, identifiable event, record onset and reopening to the nearest frame. Leave blank otherwise.</p>
     <h3>Notes</h3>
     <textarea id="notes" rows="2" placeholder="e.g. ambiguous reopening"></textarea>
-    <details><summary>Rules</summary>
-      <p>Judge visible movement only. Do not use clip length or a duration cut-off to choose a class. The labels say nothing about the person's alertness. Every clip keeps its row, including exclusions.</p>
+    <details open><summary>Which event is the target?</summary>
+      <p>Each clip was cut around one target closure. (1) If the eyes are already closed or closing in the first frame, that closure is the target. (2) Otherwise it is the closure that begins about one to two seconds into the clip; blinks in the extra footage before and after it are not the target. (3) If several closures could be the target, choose <em>Cannot judge</em>; if you see no closure, choose <em>Not a real closure</em>. (4) Set onset and reopening on the event you labelled.</p>
+      <p>Judge visible movement only. Do not use clip length or a duration cut-off to choose a class. The labels say nothing about the person's alertness.</p>
     </details>
   </aside>
 
@@ -181,12 +182,8 @@ const LABELS = [
   ["normal_blink", "Normal blink", "Ordinary, brisk lid closure and reopening."],
   ["slow_blink", "Slow blink", "Visibly slow closure or reopening of the eyelids."],
   ["prolonged_closure", "Prolonged closure", "The eyes visibly remain closed for an extended interval."],
-  ["tracking_error", "Tracking error", "Image or tracking artifact explains the apparent closure."],
-  ["uncertain", "Uncertain", "Insufficient visual evidence to assign a definite label."],
-  ["multiple_events", "Multiple events", "Several plausible eye events make target identity ambiguous."],
-  ["no_clear_eye_event", "No clear eye event", "No discernible closure."],
-  ["obscured", "Obscured", "Occlusion, pose or lighting prevents review."],
-  ["alignment_error", "Alignment error", "Target clipped at a boundary or context is insufficient."]
+  ["tracking_error", "Not a real closure", "No closure can be seen, or an image or tracking artefact explains it."],
+  ["uncertain", "Cannot judge", "Unclear, several possible targets, face hidden, or the event is cut off. Say why in the notes."]
 ];
 const CANDIDATE_FIELDS = ["review_event_id", "manual_label", "visible_start_s", "visible_end_s", "notes"];
 const AUDIT_FIELDS = ["window_id", "event_index", "manual_label", "visible_start_s", "visible_end_s", "notes"];
