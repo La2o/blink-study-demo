@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blink Study · clip rating</title>
+<style>
+  :root {--ink:#102e32;--muted:#526769;--line:#d5deda;--surface:#fff;--teal:#08715f;--stage:#10292e;--warn:#8c3c16;
+    font:15px/1.45 "Segoe UI",Arial,sans-serif;color:var(--ink);background:#f2f5f1}
+  * {box-sizing:border-box} [hidden] {display:none!important}
+  body {margin:0}
+  header {background:var(--stage);color:#f2fff1;padding:12px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  header strong {font-size:1.05rem} header .who {font-family:Consolas,monospace;font-size:.85rem;color:#cfe3da}
+  header .save {margin-left:auto;font-family:Consolas,monospace;font-size:.82rem;color:#b9f37c}
+  header .save.bad {color:#ffb39c}
+  header .save.todo {color:#ffd98a}
+  header .exports {display:flex;gap:6px;flex-wrap:wrap}
+  header .exports button {background:#b9f37c;border-color:#b9f37c;color:#10292e;font-weight:600}
+  header .exports button.sent {background:transparent;border-color:#5d7f78;color:#cfe3da;font-weight:400}
+  .setup {max-width:720px;margin:26px auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 26px}
+  .setup h1 {font-size:1.35rem;margin:0 0 8px} .setup ol {padding-left:1.2em;display:grid;gap:14px}
+  .setup li label {display:block;font-weight:600;margin-bottom:4px} .setup select {width:auto;min-width:8em}
+  .setup .or {display:block;font-size:.84rem;color:var(--muted);margin:8px 0 4px} .setup code {font-family:Consolas,monospace}
+  nav {display:flex;gap:6px;padding:12px 22px 0}
+  nav button {border:1px solid var(--line);background:#e9eeea;padding:7px 14px;border-radius:7px 7px 0 0;font:inherit;font-weight:600;cursor:pointer;color:var(--muted)}
+  nav button[aria-selected=true] {background:var(--surface);color:var(--ink);border-bottom-color:var(--surface)}
+  main {display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);gap:16px;padding:0 22px 26px;align-items:start}
+  section,aside {background:var(--surface);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:16px}
+  aside {border-radius:10px}
+  .bar {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .bar .id {font-family:Consolas,monospace;font-size:.85rem;color:var(--muted)}
+  .bar .count {margin-left:auto;font-weight:600}
+  .stage {background:#000;border-radius:8px;display:grid;place-items:center;min-height:300px}
+  video {width:100%;max-height:56vh;display:block;object-fit:contain}
+  .time {font-family:Consolas,monospace;font-size:1.05rem;margin:10px 0 6px;display:flex;gap:16px;flex-wrap:wrap}
+  input[type=range] {width:100%}
+  .controls {display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  button {font:inherit;cursor:pointer;border:1px solid #c3d2cb;background:#fff;border-radius:7px;padding:6px 11px;color:var(--ink)}
+  button:hover:not(:disabled) {background:#eef4ee} button:disabled {opacity:.45;cursor:default}
+  button:focus-visible,input:focus-visible,textarea:focus-visible {outline:3px solid #149884;outline-offset:2px}
+  button.primary {background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+  button.primary:hover:not(:disabled) {background:#055c4e}
+  button[aria-pressed=true] {background:#dff0e6;border-color:var(--teal);font-weight:600}
+  kbd {font:.74rem Consolas,monospace;border:1px solid #c3d2cb;border-bottom-width:2px;border-radius:4px;padding:0 4px;margin-left:5px;background:#f6f8f6;color:var(--muted)}
+  h2 {font-size:1rem;margin:0 0 8px} h3 {font-size:.86rem;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .labels {display:grid;gap:5px}
+  .labels button {text-align:left;display:grid;grid-template-columns:1.6em 1fr;gap:2px 6px;padding:7px 9px}
+  .labels button b {grid-column:2} .labels button span {grid-column:2;font-size:.82rem;color:var(--muted)}
+  .labels button i {font:normal .8rem Consolas,monospace;color:var(--muted);grid-row:1/3;align-self:center}
+  .times {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .times label {font-size:.82rem;color:var(--muted);display:grid;gap:3px}
+  input[type=text],textarea,select {font:inherit;border:1px solid #c3d2cb;border-radius:6px;padding:6px 8px;width:100%;color:var(--ink);background:#fff}
+  input.t {font-family:Consolas,monospace}
+  .note {font-size:.84rem;color:var(--muted);margin:8px 0 0}
+  .warn {color:var(--warn)}
+  .ratings {background:#f4f1ea;border:1px solid #e2d9c6;border-radius:7px;padding:8px 10px;margin-bottom:10px;font-size:.9rem}
+  .ratings div {font-family:Consolas,monospace;font-size:.84rem}
+  table {width:100%;border-collapse:collapse;font-size:.88rem} th {text-align:left;font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  td,th {padding:4px 4px 4px 0;vertical-align:top} td input.t {width:5.2em} td select {min-width:9em}
+  .strip {display:flex;flex-wrap:wrap;gap:3px;margin-top:12px}
+  .strip button {width:26px;height:22px;padding:0;font:.7rem Consolas,monospace;border-radius:4px}
+  .strip button.done {background:#cfe9db;border-color:#9fcdb5} .strip button.here {outline:2px solid var(--ink)}
+  details {margin-top:12px;font-size:.86rem;color:var(--muted)} summary {cursor:pointer}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <strong>Blinded eye-closure review</strong>
+  <span class="who" id="who">Loading…</span>
+  <span class="save" id="save" aria-live="polite"></span>
+  <span class="exports" id="exports" hidden>
+    <button type="button" id="export-candidates">Save candidate worksheet</button>
+    <button type="button" id="export-audit">Save audit worksheet</button>
+  </span>
+</header>
+<div id="setup" class="setup" hidden>
+  <h1>Start your review</h1>
+  <p>You received a folder of short clips and your own worksheet from the study coordinator. Unzip it, then choose that folder below. The clips are played from your computer. <strong>Nothing is uploaded.</strong></p>
+  <ol>
+    <li><label for="rater">Your rater letter</label>
+      <select id="rater"><option value="">Choose…</option><option value="A">A</option><option value="B">B</option></select></li>
+    <li><label for="folder">The unzipped folder</label>
+      <input type="file" id="folder" webkitdirectory multiple disabled>
+      <span class="or">or, if your browser cannot pick a folder, open it and select all files inside
+        <code>candidate_clips</code>, <code>audit_windows</code> and the two <code>.csv</code> files:</span>
+      <input type="file" id="files" multiple accept=".mp4,.csv,video/mp4,text/csv" disabled></li>
+  </ol>
+  <p id="setup-note" class="note" aria-live="polite">Choose your letter first.</p>
+  <p class="note">Work alone and do not compare labels with the other rater. Your progress is kept in this browser on this computer. When you finish, save both worksheets with the buttons at the top and send them to the coordinator.</p>
+</div>
+<nav role="tablist" aria-label="Review parts" id="tabs" hidden>
+  <button type="button" role="tab" id="tab-candidate" aria-selected="true">Candidate clips</button>
+  <button type="button" role="tab" id="tab-audit" aria-selected="false">Audit windows</button>
+</nav>
+<main id="workspace" hidden>
+  <section aria-label="Clip player">
+    <div class="bar">
+      <button type="button" id="prev">◀ Previous<kbd>P</kbd></button>
+      <button type="button" id="next">Next ▶<kbd>N</kbd></button>
+      <button type="button" id="next-open">Next unlabelled<kbd>U</kbd></button>
+      <span class="id" id="clip-id"></span>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="stage"><video id="video" muted playsinline loop preload="auto"></video></div>
+    <div class="time"><span id="clock">0.0 s</span><span id="frame">frame 1</span><span id="length"></span></div>
+    <input type="range" id="seek" min="0" max="0" step="1" value="0" aria-label="Frame">
+    <div class="controls">
+      <button type="button" id="play" class="primary">Play<kbd>Space</kbd></button>
+      <button type="button" id="back">◀ Frame<kbd>←</kbd></button>
+      <button type="button" id="forward">Frame ▶<kbd>→</kbd></button>
+      <button type="button" id="restart">Start<kbd>Home</kbd></button>
+      <button type="button" data-speed="1" aria-pressed="true">1×</button>
+      <button type="button" data-speed="0.5" aria-pressed="false">0.5×</button>
+      <button type="button" data-speed="0.25" aria-pressed="false">0.25×</button>
+    </div>
+    <p class="note">Watch at normal speed first, then slow down or step frame by frame. Times are seconds from this clip's own start.</p>
+    <div class="strip" id="strip" aria-label="All clips"></div>
+  </section>
+
+  <aside id="panel-candidate" aria-label="Label for this clip">
+    <div class="ratings" id="ratings" hidden></div>
+    <h2 id="panel-title">Choose one label</h2>
+    <div class="labels" id="labels"></div>
+    <h3>Visible event</h3>
+    <div class="times">
+      <label>Onset (s)<input class="t" type="text" id="start" inputmode="decimal" autocomplete="off"></label>
+      <label>Reopening (s)<input class="t" type="text" id="end" inputmode="decimal" autocomplete="off"></label>
+    </div>
+    <div class="controls">
+      <button type="button" id="mark-start">Onset = current frame<kbd>I</kbd></button>
+      <button type="button" id="mark-end">Reopening = current frame<kbd>O</kbd></button>
+    </div>
+    <p class="note" id="time-hint">For a visible, identifiable event, record onset and reopening to the nearest frame. Leave blank otherwise.</p>
+    <h3>Notes</h3>
+    <textarea id="notes" rows="2" placeholder="e.g. ambiguous reopening"></textarea>
+    <details><summary>Rules</summary>
+      <p>Judge visible movement only. Do not use clip length or a duration cut-off to choose a class. The labels say nothing about the person's alertness. Every clip keeps its row, including exclusions.</p>
+    </details>
+  </aside>
+
+  <aside id="panel-audit" aria-label="Events in this window" hidden>
+    <h2>Every visible closure in this 8-second window</h2>
+    <table><thead><tr><th>#</th><th>Label</th><th>Onset</th><th>Reopening</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="events"></tbody></table>
+    <div class="controls">
+      <button type="button" id="add-event" class="primary">Add a closure at current frame<kbd>A</kbd></button>
+      <button type="button" id="no-events">No visible closures in this window</button>
+      <button type="button" id="unreviewable">Cannot review (obscured)</button>
+    </div>
+    <p class="note" id="audit-hint"></p>
+    <details open><summary>Rules</summary>
+      <p>Inspect the whole interval, including stretches with no eye motion. One row per closure. For a closure cut off by the start or end of the window, write “left-censored” or “right-censored” in its notes. Use the row buttons to set a time from the current frame.</p>
+    </details>
+  </aside>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const FPS = 10, STEP = 1 / FPS;
+const video = $("video");
+let state = null, part = "candidate", index = {candidate: 0, audit: 0}, saving = 0, noteTimer = null;
+
+const items = () => part === "candidate" ? state.candidates : state.windows;
+const current = () => items()[index[part]];
+const idOf = item => item.review_event_id || item.window_id;
+const isDone = item => part === "candidate" ? Boolean(item.manual_label) : item.reviewed;
+const frameNow = () => Math.min(lastFrame(), Math.max(0, Math.floor(video.currentTime * FPS + 1e-3)));
+const lastFrame = () => Math.max(0, Math.round((video.duration || 0) * FPS) - 1);
+const stamp = frame => (frame * STEP).toFixed(1);
+
+function status(text, bad = false) {$("save").textContent = text; $("save").className = "save" + (bad ? " bad" : "");}
+
+// Two ways to keep the labels. With the local Python tool (review/rate.py) every change is posted to
+// it and written to the worksheet at once. Without it (the page opened from a website or a file) the
+// clips are read from a folder the rater chooses, progress is kept in this browser, and the rater
+// saves the finished worksheets as files. `local` is null in the first case.
+let local = null;
+const LABELS = [
+  ["normal_blink", "Normal blink", "Ordinary, brisk lid closure and reopening."],
+  ["slow_blink", "Slow blink", "Visibly slow closure or reopening of the eyelids."],
+  ["prolonged_closure", "Prolonged closure", "The eyes visibly remain closed for an extended interval."],
+  ["tracking_error", "Tracking error", "Image or tracking artifact explains the apparent closure."],
+  ["uncertain", "Uncertain", "Insufficient visual evidence to assign a definite label."],
+  ["multiple_events", "Multiple events", "Several plausible eye events make target identity ambiguous."],
+  ["no_clear_eye_event", "No clear eye event", "No discernible closure."],
+  ["obscured", "Obscured", "Occlusion, pose or lighting prevents review."],
+  ["alignment_error", "Alignment error", "Target clipped at a boundary or context is insufficient."]
+];
+const CANDIDATE_FIELDS = ["review_event_id", "manual_label", "visible_start_s", "visible_end_s", "notes"];
+const AUDIT_FIELDS = ["window_id", "event_index", "manual_label", "visible_start_s", "visible_end_s", "notes"];
+
+function parseCsv(text) {
+  const rows = []; let row = [], cell = "", quoted = false;
+  const source = text.replace(/^﻿/, "");
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i];
+    if (quoted) {
+      if (ch === '"' && source[i + 1] === '"') {cell += '"'; i++;}
+      else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ",") {row.push(cell); cell = "";}
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && source[i + 1] === "\n") i++;
+      row.push(cell); cell = "";
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      row = [];
+    } else cell += ch;
+  }
+  if (cell !== "" || row.length) {row.push(cell); rows.push(row);}
+  const header = rows.shift() || [];
+  return rows.map(values => Object.fromEntries(header.map((name, i) => [name.trim(), values[i] ?? ""])));
+}
+function toCsv(fields, rows) {
+  const cell = value => {const text = String(value ?? ""); return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;};
+  return [fields.join(","), ...rows.map(row => fields.map(name => cell(row[name])).join(","))].join("\r\n") + "\r\n";
+}
+function auditRows() {
+  return state.windows.flatMap(item => item.events.length ? item.events.map((event, i) => ({
+    window_id: item.window_id, event_index: event.manual_label === "no_clear_eye_event" ? 0 : i + 1,
+    manual_label: event.manual_label, visible_start_s: event.visible_start_s, visible_end_s: event.visible_end_s,
+    notes: event.notes})) : [{window_id: item.window_id}]);
+}
+function keepLocal() {
+  try {
+    localStorage.setItem(local.key, JSON.stringify({candidates: state.candidates, windows: state.windows}));
+  } catch (error) {
+    status("This browser will not keep your progress. Save your worksheets often.", true); return false;
+  }
+  local.unsent.candidates = local.unsent.audit = true;
+  for (const id of ["export-candidates", "export-audit"]) $(id).classList.remove("sent");
+  $("save").textContent = "Kept in this browser · save and send when finished"; $("save").className = "save todo";
+  return true;
+}
+function exportWorksheet(kind) {
+  const name = (kind === "audit" ? "audit_rater_" : "rater_") + state.rater + ".csv";
+  const text = kind === "audit" ? toCsv(AUDIT_FIELDS, auditRows()) : toCsv(CANDIDATE_FIELDS, state.candidates);
+  const url = URL.createObjectURL(new Blob([text], {type: "text/csv;charset=utf-8"}));
+  const link = document.createElement("a"); link.href = url; link.download = name; document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  local.unsent[kind === "audit" ? "audit" : "candidates"] = false;
+  $(kind === "audit" ? "export-audit" : "export-candidates").classList.add("sent");
+  const open = state.candidates.filter(item => !item.manual_label).length + state.windows.filter(item => !item.reviewed).length;
+  status(open ? "Saved " + name + " · " + open + " clips still unlabelled" : "Saved " + name + " · send it to the coordinator", Boolean(open));
+}
+// Build the review from the files the rater chose: clips by file name, order and earlier answers
+// from the worksheet in the folder, later answers from this browser's own storage.
+async function openFolder(fileList, rater) {
+  const clips = new Map(), sheets = new Map();
+  for (const file of fileList) {
+    const clip = /^([CW]-[0-9a-f]{16})\.mp4$/i.exec(file.name);
+    if (clip) clips.set(clip[1], file);
+    else if (/\.csv$/i.test(file.name)) sheets.set(file.name.toLowerCase(), file);
+  }
+  if (!clips.size) throw new Error("No review clips were found in what you chose. Pick the unzipped folder that contains candidate_clips and audit_windows.");
+  const sheet = async name => sheets.has(name) ? parseCsv(await sheets.get(name).text()) : null;
+  const candidateRows = await sheet("rater_" + rater.toLowerCase() + ".csv");
+  const auditSheet = await sheet("audit_rater_" + rater.toLowerCase() + ".csv");
+  const sorted = prefix => [...clips.keys()].filter(id => id.startsWith(prefix)).sort();
+  const candidates = (candidateRows || sorted("C-").map(id => ({review_event_id: id}))).map(row =>
+    Object.fromEntries(CANDIDATE_FIELDS.map(name => [name, (row[name] || "").trim()])));
+  const windows = [];
+  for (const row of auditSheet || sorted("W-").map(id => ({window_id: id}))) {
+    let item = windows.find(entry => entry.window_id === row.window_id);
+    if (!item) windows.push(item = {window_id: row.window_id, events: [], reviewed: false});
+    if ((row.event_index || "").trim() !== "") {
+      item.events.push(Object.fromEntries(AUDIT_FIELDS.slice(2).map(name => [name, (row[name] || "").trim()])));
+      item.reviewed = true;
+    }
+  }
+  const ids = [...candidates.map(item => item.review_event_id), ...windows.map(item => item.window_id)];
+  const missing = ids.filter(id => !clips.has(id));
+  let hash = 0; for (const ch of ids.join("|")) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  local = {clips, urls: new Map(), key: "blink-rating:" + rater + ":" + ids.length + ":" + hash, unsent: {candidates: false, audit: false}};
+  let resumed = false;
+  try {
+    const kept = JSON.parse(localStorage.getItem(local.key) || "null");
+    if (kept) {
+      const earlier = new Map(kept.candidates.map(item => [item.review_event_id, item]));
+      for (const item of candidates) Object.assign(item, earlier.get(item.review_event_id) || {});
+      const earlierWindows = new Map(kept.windows.map(item => [item.window_id, item]));
+      for (const item of windows) Object.assign(item, earlierWindows.get(item.window_id) || {});
+      resumed = true;
+    }
+  } catch (error) {}
+  state = {mode: "rate", rater, labels: LABELS, candidates, windows, browserOnly: true};
+  return {missing, resumed, hadSheet: Boolean(candidateRows)};
+}
+function clipSource(part, id) {
+  if (!local) return "/clip/" + part + "/" + id + ".mp4";
+  if (!local.clips.has(id)) return null;
+  if (!local.urls.has(id)) local.urls.set(id, URL.createObjectURL(local.clips.get(id)));
+  return local.urls.get(id);
+}
+
+async function post(path, body) {
+  if (local) return keepLocal();
+  saving++; status("Saving…");
+  try {
+    const reply = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    if (!reply.ok) throw new Error((await reply.json()).error || reply.statusText);
+    if (--saving === 0) status("Saved " + new Date().toLocaleTimeString());
+    return true;
+  } catch (error) {
+    saving = Math.max(0, saving - 1);
+    status("NOT SAVED: " + error.message + " — is the rating tool still running?", true);
+    return false;
+  }
+}
+
+// ----------------------------------------------------------------- player
+function seekFrame(frame) {
+  const target = Math.min(Math.max(0, frame), lastFrame());
+  video.pause();
+  video.currentTime = target * STEP + 0.02;   // just inside the frame, never on its boundary
+}
+function showTime() {
+  const frame = frameNow();
+  $("clock").textContent = stamp(frame) + " s";
+  $("frame").textContent = "frame " + (frame + 1);
+  $("seek").value = String(frame);
+  $("play").firstChild.textContent = video.paused ? "Play" : "Pause";
+}
+function watch() {showTime(); requestAnimationFrame(watch);}
+video.addEventListener("loadedmetadata", () => {
+  $("seek").max = String(lastFrame());
+  $("length").textContent = "of " + (lastFrame() + 1) + " frames (" + video.duration.toFixed(1) + " s)";
+});
+for (const name of ["seeked", "timeupdate", "play", "pause"]) video.addEventListener(name, showTime);
+video.addEventListener("error", () => status("This clip could not be played.", true));
+$("seek").addEventListener("input", event => seekFrame(Number(event.target.value)));
+$("play").addEventListener("click", () => video.paused ? video.play() : video.pause());
+$("back").addEventListener("click", () => seekFrame(frameNow() - 1));
+$("forward").addEventListener("click", () => seekFrame(frameNow() + 1));
+$("restart").addEventListener("click", () => seekFrame(0));
+document.querySelectorAll("[data-speed]").forEach(button => button.addEventListener("click", () => {
+  video.playbackRate = Number(button.dataset.speed);
+  document.querySelectorAll("[data-speed]").forEach(other => other.setAttribute("aria-pressed", String(other === button)));
+}));
+
+// ----------------------------------------------------------------- navigation
+function show() {
+  const item = current(), all = items();
+  $("panel-candidate").hidden = part !== "candidate";
+  $("panel-audit").hidden = part !== "audit";
+  $("tab-candidate").setAttribute("aria-selected", String(part === "candidate"));
+  $("tab-audit").setAttribute("aria-selected", String(part === "audit"));
+  $("count").textContent = all.length ? all.filter(isDone).length + " of " + all.length + " done" : "";
+  $("strip").replaceChildren(...all.map((entry, i) => {
+    const button = document.createElement("button");
+    button.type = "button"; button.textContent = String(i + 1);
+    button.className = (isDone(entry) ? "done" : "") + (i === index[part] ? " here" : "");
+    button.title = "Clip " + (i + 1) + (isDone(entry) ? " (done)" : "");
+    button.addEventListener("click", () => {index[part] = i; show();});
+    return button;
+  }));
+  for (const id of ["prev", "next", "next-open"]) $(id).disabled = !all.length;
+  if (!item) {
+    $("clip-id").textContent = part === "candidate" && state.mode === "adjudicate" ?
+      "No disagreements to resolve." : "Nothing to review here.";
+    video.removeAttribute("src"); video.load();
+    return;
+  }
+  $("clip-id").textContent = "Clip " + (index[part] + 1) + " · " + idOf(item);
+  const source = clipSource(part, idOf(item));
+  if (!source) {
+    video.dataset.source = ""; video.removeAttribute("src"); video.load();
+    status("The file " + idOf(item) + ".mp4 is not in the folder you chose.", true);
+  } else if (video.dataset.source !== source) {
+    video.dataset.source = source; video.src = source; video.load();
+    video.play().catch(() => {});      // muted, so autoplay is allowed; ignore if the browser refuses
+  }
+  part === "candidate" ? showCandidate(item) : showWindow(item);
+}
+function go(delta) {
+  const all = items(); if (!all.length) return;
+  index[part] = (index[part] + delta + all.length) % all.length; show();
+}
+function goOpen() {
+  const all = items();
+  for (let k = 1; k <= all.length; k++) {
+    const i = (index[part] + k) % all.length;
+    if (!isDone(all[i])) {index[part] = i; show(); return;}
+  }
+  status("Everything in this part is done.");
+}
+$("prev").addEventListener("click", () => go(-1));
+$("next").addEventListener("click", () => go(1));
+$("next-open").addEventListener("click", goOpen);
+$("tab-candidate").addEventListener("click", () => {part = "candidate"; show();});
+$("tab-audit").addEventListener("click", () => {part = "audit"; show();});
+
+// ----------------------------------------------------------------- candidate clips
+function showCandidate(item) {
+  document.querySelectorAll("#labels button").forEach(button =>
+    button.setAttribute("aria-pressed", String(button.dataset.label === item.manual_label)));
+  $("start").value = item.visible_start_s || ""; $("end").value = item.visible_end_s || "";
+  $("notes").value = item.notes || "";
+  const ratings = $("ratings");
+  ratings.hidden = !item.ratings;
+  if (item.ratings) {
+    ratings.replaceChildren(...item.ratings.map((r, i) => {
+      const line = document.createElement("div");
+      line.textContent = "Rater " + "AB"[i] + ": " + r.manual_label +
+        (r.visible_start_s ? "  " + r.visible_start_s + "–" + (r.visible_end_s || "?") + " s" : "") +
+        (r.notes ? "  · " + r.notes : "");
+      return line;
+    }));
+  }
+  timeHint(item);
+}
+function timeHint(item) {
+  const eye = ["normal_blink", "slow_blink", "prolonged_closure"].includes(item.manual_label);
+  const missing = eye && !(item.visible_start_s && item.visible_end_s);
+  const reversed = item.visible_start_s && item.visible_end_s && Number(item.visible_end_s) < Number(item.visible_start_s);
+  $("time-hint").className = "note" + (missing || reversed ? " warn" : "");
+  $("time-hint").textContent = reversed ? "Reopening is earlier than onset. Check the two times." :
+    missing ? "This label describes a visible event: please mark its onset and reopening." :
+    "For a visible, identifiable event, record onset and reopening to the nearest frame. Leave blank otherwise.";
+}
+function numberOrBlank(text) {
+  const value = text.trim().replace(",", ".");
+  return value === "" || !Number.isFinite(Number(value)) || Number(value) < 0 ? "" : Number(value).toFixed(1);
+}
+async function saveCandidate() {
+  const item = current(); if (!item || part !== "candidate") return;
+  item.visible_start_s = numberOrBlank($("start").value); item.visible_end_s = numberOrBlank($("end").value);
+  item.notes = $("notes").value.trim();
+  $("start").value = item.visible_start_s; $("end").value = item.visible_end_s;
+  timeHint(item);
+  await post("/api/candidate", {review_event_id: item.review_event_id, manual_label: item.manual_label || "",
+    visible_start_s: item.visible_start_s, visible_end_s: item.visible_end_s, notes: item.notes});
+  $("count").textContent = items().filter(isDone).length + " of " + items().length + " done";
+  document.querySelectorAll("#strip button")[index[part]]?.classList.toggle("done", isDone(item));
+}
+function chooseLabel(label) {
+  const item = current(); if (!item || part !== "candidate") return;
+  item.manual_label = label; showCandidate(item); saveCandidate();
+}
+function markTime(field) {
+  if (part !== "candidate" || !current()) return;
+  $(field).value = stamp(frameNow()); saveCandidate();
+}
+$("mark-start").addEventListener("click", () => markTime("start"));
+$("mark-end").addEventListener("click", () => markTime("end"));
+for (const id of ["start", "end"]) $(id).addEventListener("change", saveCandidate);
+$("notes").addEventListener("input", () => {clearTimeout(noteTimer); noteTimer = setTimeout(saveCandidate, 600);});
+$("notes").addEventListener("change", () => {clearTimeout(noteTimer); saveCandidate();});
+
+// ----------------------------------------------------------------- audit windows
+const AUDIT_NAMES = {normal_blink: "Normal blink", slow_blink: "Slow blink", prolonged_closure: "Prolonged closure",
+  uncertain: "Uncertain", obscured: "Obscured", no_clear_eye_event: "No visible closures"};
+function showWindow(item) {
+  const body = $("events");
+  body.replaceChildren(...item.events.map((event, i) => {
+    const row = document.createElement("tr");
+    const empty = event.manual_label === "no_clear_eye_event";
+    const cell = child => {const td = document.createElement("td"); td.append(child); row.append(td); return td;};
+    cell(document.createTextNode(empty ? "0" : String(i + 1)));
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "Label of closure " + (i + 1));
+    for (const name of (empty ? ["no_clear_eye_event"] : ["normal_blink", "slow_blink", "prolonged_closure", "uncertain", "obscured"])) {
+      const option = document.createElement("option"); option.value = name; option.textContent = AUDIT_NAMES[name];
+      option.selected = name === event.manual_label; select.append(option);
+    }
+    select.addEventListener("change", () => {event.manual_label = select.value; saveWindow();});
+    cell(select);
+    for (const field of ["visible_start_s", "visible_end_s"]) {
+      const wrap = document.createElement("div"), input = document.createElement("input"), set = document.createElement("button");
+      input.type = "text"; input.className = "t"; input.value = event[field] || ""; input.disabled = empty;
+      input.setAttribute("aria-label", (field === "visible_start_s" ? "Onset" : "Reopening") + " of closure " + (i + 1));
+      input.addEventListener("change", () => {event[field] = numberOrBlank(input.value); input.value = event[field]; saveWindow();});
+      set.type = "button"; set.textContent = "= now"; set.disabled = empty; set.style.marginTop = "3px";
+      set.addEventListener("click", () => {event[field] = stamp(frameNow()); input.value = event[field]; saveWindow();});
+      wrap.append(input, document.createElement("br"), set); cell(wrap);
+    }
+    const notes = document.createElement("input");
+    notes.type = "text"; notes.value = event.notes || ""; notes.placeholder = "left-censored…";
+    notes.setAttribute("aria-label", "Notes for closure " + (i + 1));
+    notes.addEventListener("change", () => {event.notes = notes.value.trim(); saveWindow();});
+    cell(notes);
+    const remove = document.createElement("button");
+    remove.type = "button"; remove.textContent = "Remove";
+    remove.addEventListener("click", () => {item.events.splice(i, 1); showWindow(item); saveWindow();});
+    cell(remove);
+    return row;
+  }));
+  $("audit-hint").textContent = item.events.length ? "" :
+    "Not reviewed yet. Add each closure you see, or state that there are none.";
+}
+async function saveWindow() {
+  const item = current(); if (!item || part !== "audit") return;
+  // Keep closures in time order so their numbers follow the video.
+  item.events.sort((a, b) => (a.visible_start_s === "" ? 1e9 : Number(a.visible_start_s)) - (b.visible_start_s === "" ? 1e9 : Number(b.visible_start_s)));
+  item.reviewed = item.events.length > 0;
+  await post("/api/window", {window_id: item.window_id, events: item.events});
+  showWindow(item);
+  $("count").textContent = items().filter(isDone).length + " of " + items().length + " done";
+  document.querySelectorAll("#strip button")[index[part]]?.classList.toggle("done", item.reviewed);
+}
+function addEvent() {
+  const item = current(); if (!item || part !== "audit") return;
+  item.events = item.events.filter(event => event.manual_label !== "no_clear_eye_event");
+  item.events.push({manual_label: "normal_blink", visible_start_s: stamp(frameNow()), visible_end_s: "", notes: ""});
+  saveWindow();
+}
+function wholeWindow(label) {
+  const item = current(); if (!item || part !== "audit") return;
+  const whole = label === "obscured";
+  item.events = [{manual_label: label, visible_start_s: whole ? "0.0" : "", visible_end_s: whole ? stamp(lastFrame()) : "", notes: ""}];
+  saveWindow();
+}
+$("add-event").addEventListener("click", addEvent);
+$("no-events").addEventListener("click", () => wholeWindow("no_clear_eye_event"));
+$("unreviewable").addEventListener("click", () => wholeWindow("obscured"));
+
+// ----------------------------------------------------------------- keyboard
+document.addEventListener("keydown", event => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName) && event.target.type !== "range";
+  if (typing) {if (event.key === "Escape") event.target.blur(); return;}
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  const actions = {" ": () => video.paused ? video.play() : video.pause(), ArrowLeft: () => seekFrame(frameNow() - 1),
+    ArrowRight: () => seekFrame(frameNow() + 1), Home: () => seekFrame(0), n: () => go(1), p: () => go(-1), u: goOpen,
+    i: () => markTime("start"), o: () => markTime("end"), a: addEvent};
+  if (actions[key]) {event.preventDefault(); actions[key](); return;}
+  if (part === "candidate" && /^[1-9]$/.test(key) && state.labels[Number(key) - 1]) {
+    event.preventDefault(); chooseLabel(state.labels[Number(key) - 1][0]);
+  }
+});
+window.addEventListener("beforeunload", event => {
+  if (saving || (local && (local.unsent.candidates || local.unsent.audit))) {event.preventDefault(); event.returnValue = "";}
+});
+$("export-candidates").addEventListener("click", () => exportWorksheet("candidates"));
+$("export-audit").addEventListener("click", () => exportWorksheet("audit"));
+
+// ----------------------------------------------------------------- start
+function begin() {
+  const adjudicating = state.mode === "adjudicate";
+  $("setup").hidden = true; $("tabs").hidden = false; $("workspace").hidden = false;
+  $("exports").hidden = !local;
+  $("who").textContent = adjudicating ?
+    "Adjudication · " + state.candidates.length + " disagreements, " + state.agreed + " clips already agreed" :
+    "Rater " + state.rater + " · work alone, do not compare labels" + (local ? " · clips stay on this computer" : "");
+  $("panel-title").textContent = adjudicating ? "Choose the final label" : "Choose one label";
+  $("tab-audit").hidden = adjudicating;
+  $("labels").replaceChildren(...state.labels.map(([name, title, text], i) => {
+    const button = document.createElement("button");
+    button.type = "button"; button.dataset.label = name; button.setAttribute("aria-pressed", "false");
+    const key = document.createElement("i"), head = document.createElement("b"), body = document.createElement("span");
+    key.textContent = String(i + 1); head.textContent = title; body.textContent = text;
+    button.append(key, head, body);
+    button.addEventListener("click", () => chooseLabel(name));
+    return button;
+  }));
+  const firstOpen = state.candidates.findIndex(item => !item.manual_label);
+  index.candidate = Math.max(0, firstOpen);
+  index.audit = Math.max(0, state.windows.findIndex(item => !item.reviewed));
+  show(); watch();
+}
+async function chosen(input) {
+  const rater = $("rater").value, files = [...input.files];
+  if (!rater || !files.length) return;
+  $("setup-note").className = "note"; $("setup-note").textContent = "Reading " + files.length + " files…";
+  try {
+    const found = await openFolder(files, rater);
+    begin();
+    const notes = [];
+    if (found.resumed) notes.push("Continuing from where you stopped in this browser.");
+    if (!found.hadSheet) notes.push("No worksheet for rater " + rater + " was in the folder, so clips are shown in file-name order.");
+    if (found.missing.length) notes.push(found.missing.length + " clips listed in the worksheet are missing from the folder.");
+    status(notes.join(" ") || state.candidates.length + " candidate clips and " + state.windows.length + " audit windows loaded.",
+      Boolean(found.missing.length));
+  } catch (error) {
+    local = null; input.value = "";
+    $("setup-note").className = "note warn"; $("setup-note").textContent = error.message;
+  }
+}
+(async () => {
+  // The local Python tool answers this request; a plain web or file copy of the page does not.
+  if (["127.0.0.1", "localhost"].includes(location.hostname)) {
+    try {
+      const reply = await fetch("/api/state");
+      if (reply.ok && (reply.headers.get("Content-Type") || "").includes("json")) {state = await reply.json(); begin(); return;}
+    } catch (error) {}
+  }
+  $("who").textContent = "Runs in this browser · nothing is uploaded";
+  $("setup").hidden = false;
+  $("rater").addEventListener("change", () => {
+    const ready = Boolean($("rater").value);
+    $("folder").disabled = $("files").disabled = !ready;
+    $("setup-note").textContent = ready ? "Now choose the folder." : "Choose your letter first.";
+  });
+  $("folder").addEventListener("change", event => chosen(event.target));
+  $("files").addEventListener("change", event => chosen(event.target));
+})();
+</script>
+</body>
+</html>

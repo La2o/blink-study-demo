@@ -28,7 +28,7 @@
           <canvas id="illustration" aria-label="Schematic eye showing an illustrative closure"></canvas>
           <div id="footage" hidden><video id="video" playsinline muted></video><canvas id="overlay" aria-hidden="true"></canvas></div>
           <div id="empty-state" hidden><span class="frame-icon" aria-hidden="true"></span><strong id="empty-title"></strong><span id="empty-help"></span></div>
-          <div class="stage-label"><i></i><span id="source-label">Illustrative signal</span></div>
+          <div class="stage-label"><i></i><span id="source-label">Drawing, not your camera</span></div>
           <span class="timecode" id="timecode">00:00.00</span>
           <div class="hud" id="hud" aria-hidden="true" hidden>
             <div class="hud-chips"><span class="chip" id="hud-ear">EAR —</span><span class="chip" id="hud-count">Closures 0</span><span class="chip" id="hud-last">Last —</span></div>
@@ -44,6 +44,7 @@
         </div>
         <div class="transport"><div class="actions">
           <button type="button" class="primary" id="start">Play example</button>
+          <button type="button" class="secondary" id="use-camera">Use my camera</button>
           <button type="button" class="secondary" id="stop" hidden>Stop</button>
           <input type="file" id="video-file" accept="video/*" hidden>
         </div><span id="transport-info" class="transport-info">Synthetic trace · 18 s</span></div>

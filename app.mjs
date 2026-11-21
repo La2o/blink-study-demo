@@ -6,7 +6,7 @@ import {ForeheadPulse} from "./forehead.mjs";
 const $ = id => document.getElementById(id);
 const SDK = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21";
 const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
-const SOURCE_NAMES = {example:"Illustrative signal", camera:"Live camera", file:"Local video"};
+const SOURCE_NAMES = {example:"Drawing, not your camera", camera:"Live camera", file:"Local video"};
 const BUTTON_NAMES = {example:"Play example", camera:"Start camera", file:"Choose video"};
 const EMPTY_HELP = {
   camera:["Camera preview", "Face the camera in steady light, then start capture."],
@@ -297,6 +297,7 @@ function releaseMedia() {
   // A fresh element isolates stale 'ended', 'loadeddata' and decoder events.
   const next = video.cloneNode(false);
   video.replaceWith(next); video = next;
+  quietInline(video);
   if (objectUrl) URL.revokeObjectURL(objectUrl);
   objectUrl = null;
   if (detector) detector.close();
@@ -305,7 +306,7 @@ function releaseMedia() {
 function finish(message = "") {
   const wasActive = active;
   generation++; active = false;
-  releaseScreen();
+  releaseScreen(); syncCameraShortcut();
   if (log.current) {
     log.close(true); renderLog();
     updateHud({phase:"open"}, null); updateSummary();
@@ -319,6 +320,13 @@ function finish(message = "") {
   stopButton.hidden = true;
   if (message) $("transport-info").textContent = message;
 }
+// Muted and inline are set as properties as well as attributes: an element made by cloneNode keeps
+// the attributes but not the muted state, and iPhone only starts muted, inline video without a tap.
+function quietInline(element) {
+  element.muted = true; element.defaultMuted = true; element.playsInline = true;
+  element.setAttribute("muted", ""); element.setAttribute("playsinline", "");
+}
+function syncCameraShortcut() {$("use-camera").hidden = source !== "example" || active;}
 function selectSource(value) {
   finish(); source = value;
   clearTrace();
@@ -327,7 +335,7 @@ function selectSource(value) {
   $("transport-info").textContent = {example:"Synthetic trace · 18 s",camera:"Camera permission required",file:"One face per video"}[source];
   $("trace-sub").textContent = showPreview ? "Preview of the first eight illustrative seconds" :
     "Eye aspect ratio and closure state over the last eight seconds";
-  notice(); showStage(); draw();
+  notice(); showStage(); draw(); syncCameraShortcut();
 }
 function drawOverlay(points, width, height) {
   const canvas = $("overlay");
@@ -384,8 +392,15 @@ function trackVideo(id) {
   let nextTime = 0, firstTime = null, lastTime = -1;
   function schedule() {
     if (id !== generation) return;
-    if (element.requestVideoFrameCallback) element.requestVideoFrameCallback((_,meta) => tick(meta.mediaTime));
-    else animation = requestAnimationFrame(() => tick(element.currentTime));
+    if (element.requestVideoFrameCallback) element.requestVideoFrameCallback((now,meta) => tick(frameClock(now,meta)));
+    else animation = requestAnimationFrame(now => tick(frameClock(now,null)));
+  }
+  // Seconds on a clock that always moves forward. A live camera uses the wall clock: iPhone Safari
+  // reports a frame timestamp for camera streams that does not advance, which froze tracking on the
+  // first frame. A file uses the frame's own timestamp, or the playback position if that stalls.
+  function frameClock(now, meta) {
+    if (source === "camera") return now / 1000;
+    return meta && meta.mediaTime > lastTime ? meta.mediaTime : element.currentTime;
   }
   function tick(mediaTime) {
     if (id !== generation || element.ended) return;
@@ -425,7 +440,7 @@ async function start(file = null) {
   finish();
   const id = generation;
   clearTrace(); notice(); draw(); active = true;
-  holdScreen();
+  holdScreen(); syncCameraShortcut();
   $("trace-sub").textContent = "Eye aspect ratio and closure state over the last eight seconds";
   fileName = file ? file.name : "";
   startButton.disabled = true;
@@ -472,9 +487,10 @@ async function start(file = null) {
     video.addEventListener("error", () => {
       if (id === generation) {finish("Video could not play");notice("Try an MP4 or WebM file supported by this browser.");}
     },{once:true});
+    quietInline(video);
+    showStage(true);   // visible before playback starts: iPhone does not decode a hidden video
     await video.play();
     if (id !== generation) return;
-    showStage(true);
     startButton.textContent = source === "camera" ? "Camera active" : "Playing video";
     $("transport-info").textContent = source === "camera" ? "Live capture · target 10 Hz" :
       file.name + " · 00:00 / " + (Number.isFinite(video.duration) ? clock(video.duration) : "--:--");
@@ -523,7 +539,11 @@ startButton.addEventListener("click", () => {
   if (source === "file") $("video-file").click();
   else start();
 });
-stopButton.addEventListener("click", () => finish("Session stopped"));
+stopButton.addEventListener("click", () => {finish("Session stopped"); syncCameraShortcut();});
+$("use-camera").addEventListener("click", () => {
+  document.querySelector('input[name="source"][value="camera"]').checked = true;
+  selectSource("camera"); start();
+});
 $("video-file").addEventListener("change", event => {
   const file = event.target.files[0];event.target.value = "";
   if (file) start(file);
