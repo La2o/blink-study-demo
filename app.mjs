@@ -1,7 +1,10 @@
-import {EventMonitor} from "./monitor.mjs";
-import {faceRatios, exampleRatios, EXAMPLE_SECONDS, OUTLINES, MOUTH_POINTS} from "./signals.mjs";
-import {drawEye, drawTrace, drawClosures} from "./plots.mjs";
-import {ForeheadPulse} from "./forehead.mjs";
+// The host lets browsers keep scripts for ten minutes. Each release changes this number here and in
+// index.html, so a phone can never pair a new page with an old script.
+import {EventMonitor} from "./monitor.mjs?v=5";
+import {faceRatios, exampleRatios, EXAMPLE_SECONDS, OUTLINES, MOUTH_POINTS} from "./signals.mjs?v=5";
+import {drawEye, drawTrace, drawClosures} from "./plots.mjs?v=5";
+import {ForeheadPulse} from "./forehead.mjs?v=5";
+const BUILD = "5";
 
 const $ = id => document.getElementById(id);
 const SDK = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21";
@@ -585,4 +588,5 @@ $("download-events").addEventListener("click", () => {
 window.addEventListener("pagehide", () => finish());
 new ResizeObserver(draw).observe(document.querySelector(".workspace"));
 selectSource("example");
+$("build").textContent = "Version " + BUILD + ".";
 loadDefault().finally(() => {loadingDefault = false; if (!active) startButton.disabled = false;});
