@@ -135,7 +135,7 @@
     <h3>Notes</h3>
     <textarea id="notes" rows="2" placeholder="e.g. ambiguous reopening"></textarea>
     <details open><summary>Which event is the target?</summary>
-      <p>Each clip was cut around one target closure. (1) If the eyes are already closed or closing in the first frame, that closure is the target. (2) Otherwise it is the closure that begins about one to two seconds into the clip; blinks in the extra footage before and after it are not the target. (3) If several closures could be the target, choose <em>Cannot judge</em>; if you see no closure, choose <em>Not a real closure</em>. (4) Set onset and reopening on the event you labelled.</p>
+      <p>Each clip was cut around one target closure. (1) If the eyes are already closed or closing in the first frame, that closure is the target. (2) Otherwise it is the closure that begins about one to two seconds into the clip; blinks in the extra footage before and after it are not the target. (3) If several closures could be the target, or you see no real closure, choose <em>Cannot label</em> and say why in the notes. (4) Set onset and reopening on the event you labelled.</p>
       <p>Judge visible movement only. Do not use clip length or a duration cut-off to choose a class. The labels say nothing about the person's alertness.</p>
     </details>
   </aside>
@@ -180,10 +180,8 @@ function status(text, bad = false) {$("save").textContent = text; $("save").clas
 let local = null;
 const LABELS = [
   ["normal_blink", "Normal blink", "Ordinary, brisk lid closure and reopening."],
-  ["slow_blink", "Slow blink", "Visibly slow closure or reopening of the eyelids."],
-  ["prolonged_closure", "Prolonged closure", "The eyes visibly remain closed for an extended interval."],
-  ["tracking_error", "Not a real closure", "No closure can be seen, or an image or tracking artefact explains it."],
-  ["uncertain", "Cannot judge", "Unclear, several possible targets, face hidden, or the event is cut off. Say why in the notes."]
+  ["suspicious_closure", "Suspicious closure", "Visibly slow closing or reopening, or the eyes stay closed for an extended time."],
+  ["uncertain", "Cannot label", "No real closure, an image or tracking artefact, several possible targets, face hidden, or the event is cut off. Say why in the notes."]
 ];
 const CANDIDATE_FIELDS = ["review_event_id", "manual_label", "visible_start_s", "visible_end_s", "notes"];
 const AUDIT_FIELDS = ["window_id", "event_index", "manual_label", "visible_start_s", "visible_end_s", "notes"];
@@ -409,7 +407,7 @@ function showCandidate(item) {
   timeHint(item);
 }
 function timeHint(item) {
-  const eye = ["normal_blink", "slow_blink", "prolonged_closure"].includes(item.manual_label);
+  const eye = ["normal_blink", "suspicious_closure"].includes(item.manual_label);
   const missing = eye && !(item.visible_start_s && item.visible_end_s);
   const reversed = item.visible_start_s && item.visible_end_s && Number(item.visible_end_s) < Number(item.visible_start_s);
   $("time-hint").className = "note" + (missing || reversed ? " warn" : "");
@@ -447,7 +445,7 @@ $("notes").addEventListener("input", () => {clearTimeout(noteTimer); noteTimer =
 $("notes").addEventListener("change", () => {clearTimeout(noteTimer); saveCandidate();});
 
 // ----------------------------------------------------------------- audit windows
-const AUDIT_NAMES = {normal_blink: "Normal blink", slow_blink: "Slow blink", prolonged_closure: "Prolonged closure",
+const AUDIT_NAMES = {normal_blink: "Normal blink", suspicious_closure: "Suspicious closure",
   uncertain: "Uncertain", obscured: "Obscured", no_clear_eye_event: "No visible closures"};
 function showWindow(item) {
   const body = $("events");
@@ -458,7 +456,7 @@ function showWindow(item) {
     cell(document.createTextNode(empty ? "0" : String(i + 1)));
     const select = document.createElement("select");
     select.setAttribute("aria-label", "Label of closure " + (i + 1));
-    for (const name of (empty ? ["no_clear_eye_event"] : ["normal_blink", "slow_blink", "prolonged_closure", "uncertain", "obscured"])) {
+    for (const name of (empty ? ["no_clear_eye_event"] : ["normal_blink", "suspicious_closure", "uncertain", "obscured"])) {
       const option = document.createElement("option"); option.value = name; option.textContent = AUDIT_NAMES[name];
       option.selected = name === event.manual_label; select.append(option);
     }
